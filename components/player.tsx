@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { parseBlob } from "music-metadata-browser";
 import { Button } from "./ui/button";
 import {
@@ -11,42 +11,123 @@ import {
   VolumeHigh,
   VolumeLow,
   VolumeMute,
+  ArrowDown,
+  ArrowUp,
 } from "./icons";
 import Image from "next/image";
+import { useTracks } from "@/components/tracksContext";
 
-const tracks = [
-  {
-    src: "/02 Henok Abebe - Honuatal (2).mp3",
-  },
-  {
-    src: "/Yene Neger - Gossaye Tesfaye (128).mp3",
-  },
-  {
-    src: "/Albo - Theodros Tadesse (128).mp3",
-  },
-  {
-    src: "/Be-Gudde Ewotana - Theodros Tadesse (128).mp3",
-  },
-  {
-    src: "/Bemela Besebeb - Tewodros Tadesse (128).mp3",
-  },
-  {
-    src: "/Degu Abate - Zeritu Kebede (128).mp3",
-  },
-];
+// const tracks = [
+//   { src: "/02 Henok Abebe - Honuatal (2).mp3" },
+//   { src: "/Abay Weyes Vegas - Gossaye Tesfaye (128).mp3" },
+//   { src: "/Adera - Gossaye Tesfaye  Mahmoud Ahmed (128).mp3" },
+//   { src: "/Akal Lakal - Zeritu Kebede (128).mp3" },
+//   { src: "/Akoyat - Gossaye Tesfaye (128).mp3" },
+//   { src: "/Albo - Theodros Tadesse (128).mp3" },
+//   { src: "/Alekaye - Gossaye Tesfaye (128).mp3" },
+//   { src: "/Alikefam - Zeritu Kebede (128).mp3" },
+//   { src: "/Atihidibign - Zeritu Kebede (128).mp3" },
+//   { src: "/Ayeqerm Andsew - Tewodros Tadesse (128).mp3" },
+//   { src: "/Aywedegnim - Zeritu Kebede (128).mp3" },
+//   { src: "/Bado Neber - Haile Roots (128).mp3" },
+//   { src: "/Be-Ayne Metash Woy - Theodros Tadesse (128).mp3" },
+//   { src: "/Be-Gudde Ewotana - Theodros Tadesse (128).mp3" },
+//   { src: "/Beketemaw Bemndru - Tewodros Tadesse (128).mp3" },
+//   { src: "/Bemela Besebeb - Tewodros Tadesse (128).mp3" },
+//   { src: "/Bemewadedachin - Tewodros Tadesse (128).mp3" },
+//   { src: "/Beyemehalu - Haile Roots (128).mp3" },
+//   { src: "/Chew Lerasish - Haile Roots (128).mp3" },
+//   { src: "/Chiggae - Haile Roots (128).mp3" },
+//   { src: "/Degu Abate - Zeritu Kebede (128).mp3" },
+//   { src: "/Dire Dire - Gossaye Tesfaye (128).mp3" },
+//   { src: "/Enateye - Gossaye Tesfaye (128).mp3" },
+//   { src: "/Endaygelegn - Zeritu Kebede (128).mp3" },
+//   { src: "/Ethiopia - Haile Roots (128).mp3" },
+//   { src: "/Ewedihalew Bila - Gossaye Tesfaye (128).mp3" },
+//   { src: "/Fitret Ende Kelale - Gossaye Tesfaye (128).mp3" },
+//   { src: "/Girma Mogese - Theodros Tadesse (128).mp3" },
+//   { src: "/Habte - Zeritu Kebede (128).mp3" },
+//   { src: "/Harambie - Haile Roots (128).mp3" },
+//   { src: "/Hulle Menash Mulu - Theodros Tadesse (128).mp3" },
+//   { src: "/Kerehugne Tekije - Theodros Tadesse (128).mp3" },
+//   { src: "/Ketemaw - Theodros Tadesse (128).mp3" },
+//   { src: "/Konjiye - Gossaye Tesfaye (128).mp3" },
+//   { src: "/Koya Babo - Gossaye Tesfaye (128).mp3" },
+//   { src: "/Kubelelsh Woye - Tewodros Tadesse (128).mp3" },
+//   { src: "/Laewnet Sile - Tewodros Tadesse (128).mp3" },
+//   { src: "/Lalibela - Gossaye Tesfaye (128).mp3" },
+//   { src: "/Leman Biyie - Haile Roots (128).mp3" },
+//   { src: "/Letanashwa Lisga - Gossaye Tesfaye (128).mp3" },
+//   { src: "/Man New - Haile Roots (128).mp3" },
+//   { src: "/Melegna - Theodros Tadesse (128).mp3" },
+//   { src: "/Melkam Yamarech - Haile Roots (128).mp3" },
+//   { src: "/Min Adergalehu - Gossaye Tesfaye (128).mp3" },
+//   { src: "/Nisueh Quanquayie - Haile Roots (128).mp3" },
+//   { src: "/Satamehagn Bila - Gossaye Tesfaye (128).mp3" },
+//   { src: "/Sene - Gossaye Tesfaye (128).mp3" },
+//   { src: "/Sew Mamen - Tewodros Tadesse (128).mp3" },
+//   { src: "/Sew Telamdo - Gossaye Tesfaye (128).mp3" },
+//   { src: "/Simesh Yikefagnal - Zeritu Kebede (128).mp3" },
+//   { src: "/Tameryalesh - Gossaye Tesfaye (128).mp3" },
+//   { src: "/Tena-Adam - Theodros Tadesse (128).mp3" },
+//   { src: "/Tey Tey Eyalikushe - Tewodros Tadesse (128).mp3" },
+//   { src: "/Tuxedo - Gossaye Tesfaye (128).mp3" },
+//   { src: "/Wa - Gossaye Tesfaye (128).mp3" },
+//   { src: "/Wegen Tesebseb - Gossaye Tesfaye (128).mp3" },
+//   { src: "/Wib Nat - Gossaye Tesfaye (128).mp3" },
+//   { src: "/Woin Yastefese - Gossaye Tesfaye (128).mp3" },
+//   { src: "/Wudinesh - Haile Roots (128).mp3" },
+//   { src: "/Yane - Zeritu Kebede (128).mp3" },
+//   { src: "/Yeged Sew - Gossaye Tesfaye (128).mp3" },
+//   { src: "/Yelamba Kuraz Kire - Gossaye Tesfaye (128).mp3" },
+//   { src: "/Yenem Ayin Aytoal - Zeritu Kebede (128).mp3" },
+//   { src: "/Yene Neger - Gossaye Tesfaye (128).mp3" },
+//   { src: "/Yetefa Yigegnal - Haile Roots (128).mp3" },
+//   { src: "/Yihun - Zeritu Kebede (128).mp3" },
+//   { src: "/Yikiribish Yihe Sew - Zeritu Kebede (128).mp3" },
+//   { src: "/Zemdem Liblshe - Tewodros Tadesse (128).mp3" },
+//   { src: "/Zim - Gossaye Tesfaye (128).mp3" },
+//   { src: "/Zimita - Theodros Tadesse (128).mp3" },
+// ];
 
 export default function Player() {
   let defaultVolume = 1;
+  let storedTracksIdx = 0;
   if (typeof window !== "undefined") {
     defaultVolume = Number(localStorage.getItem("volume")) || 1;
+    storedTracksIdx = Number(localStorage.getItem("currentTrackIndex")) || 0;
   }
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
+
+  const storedTracks = useMemo(() => {
+    if (typeof window !== "undefined") {
+      const strTracks = localStorage.getItem("tracks");
+      return strTracks ? JSON.parse(strTracks) : [];
+    }
+    return [];
+  }, []);
+
+  const { tracks, setTracks } = useTracks();
+  const [currentTrackIndex, setCurrentTrackIndex] = useState(storedTracksIdx);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [volume, setVolume] = useState(defaultVolume);
   const [prevVolume, setPrevVolume] = useState(volume);
   const [metadata, setMetadata] = useState({});
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      setDuration(audioRef.current.duration);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (storedTracks.length > 0) {
+      setTracks(storedTracks);
+    }
+  }, [setTracks, storedTracks]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -56,7 +137,10 @@ export default function Player() {
 
   useEffect(() => {
     fetchMetadata(tracks[currentTrackIndex].src);
-  }, [currentTrackIndex]);
+    if (audioRef.current) {
+      audioRef.current.src = tracks[currentTrackIndex].src;
+    }
+  }, [currentTrackIndex, tracks]);
 
   const fetchMetadata = async (src: string) => {
     const response = await fetch(src);
@@ -78,6 +162,8 @@ export default function Player() {
 
   const handleNext = () => {
     setCurrentTrackIndex((prevIndex) => (prevIndex + 1) % tracks.length);
+    const nextIdx = (currentTrackIndex + 1) % tracks.length;
+    localStorage.setItem("currentTrackIndex", nextIdx.toString());
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.load();
@@ -91,6 +177,9 @@ export default function Player() {
     setCurrentTrackIndex((prevIndex) =>
       prevIndex === 0 ? tracks.length - 1 : prevIndex - 1
     );
+    const prevIdx =
+      currentTrackIndex === 0 ? tracks.length - 1 : currentTrackIndex - 1;
+    localStorage.setItem("currentTrackIndex", prevIdx.toString());
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.load();
@@ -102,6 +191,7 @@ export default function Player() {
 
   const handleTimeUpdate = () => {
     if (audioRef.current) {
+      setCurrentTime(audioRef.current.currentTime);
       setProgress(
         (audioRef.current.currentTime / audioRef.current.duration) * 100
       );
@@ -125,34 +215,60 @@ export default function Player() {
     }
   };
 
+  const handleLoadedMetadata = () => {
+    if (audioRef.current && audioRef.current.duration > 0) {
+      setDuration(audioRef.current.duration);
+    }
+  };
+
+  const handleLoadedData = () => {
+    if (audioRef.current && audioRef.current.duration > 0) {
+      setDuration(audioRef.current.duration);
+    }
+  };
+
+  const formatTime = (time: number) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+  };
+
   return (
-    <div className="fixed w-[90%] md:w-[75%] bottom-2 left-1/2 transform -translate-x-1/2 px-3 py-2 md:py-1 inline-flex flex-col lg:flex-row lg:items-center justify-between bg-white/5 rounded-3xl">
-      <div className="flex flex-row w-56">
-        <div className="relative h-16 w-16">
-          {metadata.common?.picture && (
-            <Image
-              fill
-              className="object-cover rounded-xl lg:rounded-sm"
-              src={`data:${
-                metadata.common.picture[0].format
-              };base64,${Buffer.from(metadata.common.picture[0].data).toString(
-                "base64"
-              )}`}
-              alt="Album Art"
-            />
-          )}
+    <div className="fixed w-[90%] lg:w-[95%] xl:w-[90%] max-w-[1200px] bottom-2 left-1/2 transform -translate-x-1/2 px-3 py-3 md:py-2 inline-flex flex-col lg:flex-row lg:items-center justify-between bg-white/5 rounded-3xl">
+      <div className="flex flex-row justify-between w-full lg:w-64">
+        <div className="flex flex-row">
+          <div className="relative h-16 w-16">
+            {metadata.common?.picture && (
+              <Image
+                fill
+                className="object-cover rounded-xl lg:rounded-sm"
+                src={`data:${
+                  metadata.common.picture[0].format
+                };base64,${Buffer.from(
+                  metadata.common.picture[0].data
+                ).toString("base64")}`}
+                alt="Album Art"
+              />
+            )}
+          </div>
+          <div className="flex flex-col w-36 overflow-hidden text-nowrap ml-3">
+            <h2>{metadata.common?.title || "Unknown Track"}</h2>
+            <p className="text-muted text-sm">{metadata.common?.artist}</p>
+          </div>
         </div>
-        <div className="flex flex-col w-36 overflow-hidden text-nowrap ml-3">
-          <h2>{metadata.common?.title || "Unknown Track"}</h2>
-          <p className="text-muted text-sm">{metadata.common?.artist}</p>
-        </div>
+        <button className="flex flex-col lg:hidden justify-between h-10 rotate-45 [&_svg]:size-[1.3rem] mr-2">
+          <ArrowUp />
+          <ArrowDown />
+        </button>
       </div>
-      <div className="w-full flex flex-col-reverse lg:flex-col backdrop-blur-sm items-center justify-center p-2 space-y-2">
+      <div className="flex flex-col-reverse lg:flex-col backdrop-blur-sm items-center justify-center p-2 space-y-2">
         <audio
           ref={audioRef}
-          src={tracks[currentTrackIndex].src}
+          // src={tracks[currentTrackIndex].src}
           onTimeUpdate={handleTimeUpdate}
           onEnded={handleNext}
+          onLoadedMetadata={handleLoadedMetadata}
+          onLoadedData={handleLoadedData}
         />
         <div className="space-x-2">
           <Button variant="secondary" onClick={handlePrevious}>
@@ -165,7 +281,8 @@ export default function Player() {
             <Next />
           </Button>
         </div>
-        <div className="w-full md:w-auto">
+        <div className="w-full flex flex-row items-center space-x-2 md:w-auto text-sm text-muted">
+          <span className="w-10 text-end">{formatTime(currentTime)}</span>
           <input
             className="w-full md:w-96 progress-bar"
             type="range"
@@ -179,33 +296,40 @@ export default function Player() {
               }
             }}
           />
+          <span className="w-10">{formatTime(duration)}</span>
         </div>
       </div>
-      <div className="hidden lg:flex w-56 space-x-4">
-        <Button variant="secondary">
-          <Queue />
-        </Button>
-        <div className="flex flex-row items-center justify-center space-x-2">
-          <Button onClick={toggleMute} variant="secondary">
-            {volume === 0 ? (
-              <VolumeMute />
-            ) : volume < 0.5 && volume !== 0 ? (
-              <VolumeLow />
-            ) : (
-              <VolumeHigh />
-            )}
+      <div className="hidden lg:flex flex-row justify-between w-64 h-full items-center">
+        <div className="flex flex-row space-x-2">
+          <Button variant="secondary">
+            <Queue className="h-6 w-6" />
           </Button>
-          <input
-            id="volume"
-            type="range"
-            className="volume-bar w-20"
-            min="0"
-            max="1"
-            step="0.01"
-            value={volume}
-            onChange={handleVolumeChange}
-          />
+          <div className="flex flex-row items-center justify-center space-x-1">
+            <Button onClick={toggleMute} variant="secondary">
+              {volume === 0 ? (
+                <VolumeMute />
+              ) : volume < 0.5 && volume !== 0 ? (
+                <VolumeLow />
+              ) : (
+                <VolumeHigh />
+              )}
+            </Button>
+            <input
+              id="volume"
+              type="range"
+              className="volume-bar w-20"
+              min="0"
+              max="1"
+              step="0.01"
+              value={volume}
+              onChange={handleVolumeChange}
+            />
+          </div>
         </div>
+        <button className="flex flex-col justify-between h-10 hover:h-14 transition-all rotate-45 [&_svg]:size-[1.3rem] mr-2">
+          <ArrowUp />
+          <ArrowDown />
+        </button>
       </div>
     </div>
   );
