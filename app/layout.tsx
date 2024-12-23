@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { TracksProvider } from "@/components/tracksContext";
+import Player from "@/components/player";
 
 const generalSans = localFont({
   src: "../public/fonts/GeneralSans_Complete/Fonts/OTF/GeneralSans-Medium.otf",
@@ -21,7 +22,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${generalSans.variable} antialiased font-regular`}>
-        <TracksProvider>{children}</TracksProvider>
+        <TracksProvider>
+          {children} <Player />
+        </TracksProvider>
       </body>
     </html>
   );

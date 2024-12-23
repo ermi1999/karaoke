@@ -54,6 +54,10 @@ export default {
           "5": "hsl(var(--chart-5))",
         },
       },
+      borderRadius: {
+        "4xl": "2rem",
+        "5xl": "3rem",
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],

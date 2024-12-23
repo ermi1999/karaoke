@@ -1,8 +1,10 @@
 "use client";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 interface Track {
   src: string;
+  file?: File;
+  type: "backend" | "local";
 }
 
 interface TracksContextType {
@@ -24,6 +26,12 @@ export const useTracks = () => {
 export const TracksProvider = ({ children }: { children: React.ReactNode }) => {
   const [tracks, setTracks] = useState<Track[]>([]);
 
+  useEffect(() => {
+    const storedTracks = localStorage.getItem("tracks");
+    if (storedTracks) {
+      setTracks(JSON.parse(storedTracks));
+    }
+  }, []);
   return (
     <TracksContext.Provider value={{ tracks, setTracks }}>
       {children}

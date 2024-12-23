@@ -121,13 +121,6 @@ export default function Player() {
   }, []);
 
   useEffect(() => {
-    const storedTracks = localStorage.getItem("tracks");
-    if (storedTracks) {
-      setTracks(JSON.parse(storedTracks));
-    }
-  }, [setTracks]);
-
-  useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = volume;
     }
@@ -162,8 +155,8 @@ export default function Player() {
       setCurrentTrackIndex((prevIndex) => {
         console.log(prevIndex);
         const nextIdx = (prevIndex + 1) % tracks.length;
-        localStorage.setItem("currentTrackIndex", nextIdx.toString());
-        console.log(nextIdx);
+        if (tracks[currentTrackIndex].type !== "local")
+          localStorage.setItem("currentTrackIndex", nextIdx.toString());
         return nextIdx;
       });
       audioRef.current.pause();
@@ -178,7 +171,8 @@ export default function Player() {
     if (audioRef.current && tracks.length > 0) {
       setCurrentTrackIndex((prevIndex) => {
         const prevIdx = prevIndex === 0 ? tracks.length - 1 : prevIndex - 1;
-        localStorage.setItem("currentTrackIndex", prevIdx.toString());
+        if (tracks[currentTrackIndex].type !== "local")
+          localStorage.setItem("currentTrackIndex", prevIdx.toString());
         return prevIdx;
       });
       audioRef.current.pause();
@@ -234,7 +228,7 @@ export default function Player() {
   };
 
   return (
-    <div className="fixed w-[90%] lg:w-[95%] xl:w-[90%] max-w-[1200px] bottom-2 left-1/2 transform -translate-x-1/2 px-3 py-3 md:py-2 inline-flex flex-col lg:flex-row lg:items-center justify-between bg-white/5 rounded-3xl">
+    <div className="fixed w-[90%] lg:w-[95%] xl:w-[90%] max-w-[1200px] bottom-2 left-1/2 transform -translate-x-1/2 px-3 py-3 md:py-2 inline-flex flex-col lg:flex-row lg:items-center justify-between bg-white/5 backdrop-blur-lg rounded-3xl">
       <div className="flex flex-row justify-between w-full lg:w-64">
         <div className="flex flex-row">
           <div className="relative h-16 w-16">
@@ -251,7 +245,7 @@ export default function Player() {
               />
             ) : (
               <div className="h-full w-full flex items-center justify-center backdrop-blur-xl bg-white/5 rounded-xl">
-                <Music />
+                <Music height="1.5em" width="1.5em" />
               </div>
             )}
           </div>

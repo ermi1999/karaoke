@@ -1,9 +1,9 @@
-import Player from "@/components/player";
+import FileUpload from "@/components/fileUpload";
 
 export default function Home() {
   return (
-    <div>
-      <Player />
-    </div>
+    <main className="flex justify-center mt-20">
+      <FileUpload />
+    </main>
   );
 }
