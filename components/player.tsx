@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { parseBlob } from "music-metadata-browser";
 import { Button } from "./ui/button";
 import {
@@ -13,6 +13,7 @@ import {
   VolumeMute,
   ArrowDown,
   ArrowUp,
+  Music,
 } from "./icons";
 import Image from "next/image";
 import { useTracks } from "@/components/tracksContext";
@@ -91,26 +92,22 @@ import { useTracks } from "@/components/tracksContext";
 // ];
 
 export default function Player() {
-  let defaultVolume = 1;
-  let storedTracksIdx = 0;
-  if (typeof window !== "undefined") {
-    defaultVolume = Number(localStorage.getItem("volume")) || 1;
-    storedTracksIdx = Number(localStorage.getItem("currentTrackIndex")) || 0;
-  }
-
-  const storedTracks = useMemo(() => {
-    if (typeof window !== "undefined") {
-      const strTracks = localStorage.getItem("tracks");
-      return strTracks ? JSON.parse(strTracks) : [];
-    }
-    return [];
-  }, []);
-
   const { tracks, setTracks } = useTracks();
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(storedTracksIdx);
+  const [currentTrackIndex, setCurrentTrackIndex] = useState(() => {
+    if (typeof window !== "undefined") {
+      return Number(localStorage.getItem("currentTrackIndex")) || 0;
+    }
+    return 0;
+  });
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [volume, setVolume] = useState(defaultVolume);
+  const [volume, setVolume] = useState(() => {
+    if (typeof window !== "undefined") {
+      return Number(localStorage.getItem("volume")) || 1;
+    }
+    return 1;
+  });
   const [prevVolume, setPrevVolume] = useState(volume);
   const [metadata, setMetadata] = useState({});
   const [currentTime, setCurrentTime] = useState(0);
@@ -124,10 +121,11 @@ export default function Player() {
   }, []);
 
   useEffect(() => {
-    if (storedTracks.length > 0) {
-      setTracks(storedTracks);
+    const storedTracks = localStorage.getItem("tracks");
+    if (storedTracks) {
+      setTracks(JSON.parse(storedTracks));
     }
-  }, [setTracks, storedTracks]);
+  }, [setTracks]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -136,9 +134,8 @@ export default function Player() {
   }, [volume]);
 
   useEffect(() => {
-    fetchMetadata(tracks[currentTrackIndex].src);
     if (audioRef.current) {
-      audioRef.current.src = tracks[currentTrackIndex].src;
+      fetchMetadata(tracks[currentTrackIndex].src);
     }
   }, [currentTrackIndex, tracks]);
 
@@ -161,10 +158,14 @@ export default function Player() {
   };
 
   const handleNext = () => {
-    setCurrentTrackIndex((prevIndex) => (prevIndex + 1) % tracks.length);
-    const nextIdx = (currentTrackIndex + 1) % tracks.length;
-    localStorage.setItem("currentTrackIndex", nextIdx.toString());
-    if (audioRef.current) {
+    if (audioRef.current && tracks.length > 0) {
+      setCurrentTrackIndex((prevIndex) => {
+        console.log(prevIndex);
+        const nextIdx = (prevIndex + 1) % tracks.length;
+        localStorage.setItem("currentTrackIndex", nextIdx.toString());
+        console.log(nextIdx);
+        return nextIdx;
+      });
       audioRef.current.pause();
       audioRef.current.load();
       audioRef.current.onloadedmetadata = () => {
@@ -174,13 +175,12 @@ export default function Player() {
   };
 
   const handlePrevious = () => {
-    setCurrentTrackIndex((prevIndex) =>
-      prevIndex === 0 ? tracks.length - 1 : prevIndex - 1
-    );
-    const prevIdx =
-      currentTrackIndex === 0 ? tracks.length - 1 : currentTrackIndex - 1;
-    localStorage.setItem("currentTrackIndex", prevIdx.toString());
-    if (audioRef.current) {
+    if (audioRef.current && tracks.length > 0) {
+      setCurrentTrackIndex((prevIndex) => {
+        const prevIdx = prevIndex === 0 ? tracks.length - 1 : prevIndex - 1;
+        localStorage.setItem("currentTrackIndex", prevIdx.toString());
+        return prevIdx;
+      });
       audioRef.current.pause();
       audioRef.current.load();
       audioRef.current.onloadedmetadata = () => {
@@ -191,10 +191,10 @@ export default function Player() {
 
   const handleTimeUpdate = () => {
     if (audioRef.current) {
-      setCurrentTime(audioRef.current.currentTime);
-      setProgress(
-        (audioRef.current.currentTime / audioRef.current.duration) * 100
-      );
+      const currentTime = audioRef.current.currentTime;
+      const duration = audioRef.current.duration || 1; // Default to 1 to avoid division by zero
+      setCurrentTime(currentTime);
+      setProgress((currentTime / duration) * 100);
     }
   };
 
@@ -238,7 +238,7 @@ export default function Player() {
       <div className="flex flex-row justify-between w-full lg:w-64">
         <div className="flex flex-row">
           <div className="relative h-16 w-16">
-            {metadata.common?.picture && (
+            {metadata.common?.picture ? (
               <Image
                 fill
                 className="object-cover rounded-xl lg:rounded-sm"
@@ -249,12 +249,20 @@ export default function Player() {
                 ).toString("base64")}`}
                 alt="Album Art"
               />
+            ) : (
+              <div className="h-full w-full flex items-center justify-center backdrop-blur-xl bg-white/5 rounded-xl">
+                <Music />
+              </div>
             )}
           </div>
-          <div className="flex flex-col w-36 overflow-hidden text-nowrap ml-3">
-            <h2>{metadata.common?.title || "Unknown Track"}</h2>
-            <p className="text-muted text-sm">{metadata.common?.artist}</p>
-          </div>
+          {tracks.length > 0 && (
+            <div className="flex flex-col w-36 overflow-hidden text-nowrap ml-3">
+              <h2>{metadata.common?.title || "Unknown Track"}</h2>
+              <p className="text-muted text-sm">
+                {metadata.common?.artist || "Unknown Artist"}
+              </p>
+            </div>
+          )}
         </div>
         <button className="flex flex-col lg:hidden justify-between h-10 rotate-45 [&_svg]:size-[1.3rem] mr-2">
           <ArrowUp />
@@ -262,14 +270,16 @@ export default function Player() {
         </button>
       </div>
       <div className="flex flex-col-reverse lg:flex-col backdrop-blur-sm items-center justify-center p-2 space-y-2">
-        <audio
-          ref={audioRef}
-          // src={tracks[currentTrackIndex].src}
-          onTimeUpdate={handleTimeUpdate}
-          onEnded={handleNext}
-          onLoadedMetadata={handleLoadedMetadata}
-          onLoadedData={handleLoadedData}
-        />
+        {tracks.length > 0 && (
+          <audio
+            ref={audioRef}
+            src={tracks[currentTrackIndex].src}
+            onTimeUpdate={handleTimeUpdate}
+            onEnded={handleNext}
+            onLoadedMetadata={handleLoadedMetadata}
+            onLoadedData={handleLoadedData}
+          />
+        )}
         <div className="space-x-2">
           <Button variant="secondary" onClick={handlePrevious}>
             <Prev width="10em" height="10em" />

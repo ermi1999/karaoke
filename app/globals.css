@@ -44,7 +44,7 @@
 .volume-bar {
   -webkit-appearance: none;
   appearance: none;
-  height: 4px;
+  height: 5px;
   background: white;
   outline: none;
   opacity: 0.8;
