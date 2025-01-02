@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { usePlayer } from "./playerContext";
+import { cn } from "@/lib/utils";
 
 interface LyricLine {
   time: number;
@@ -27,7 +28,7 @@ const parseLRC = (lrc: string): LyricLine[] => {
 
 export default function SyncedLyrics() {
   const [lyrics, setLyrics] = useState<LyricLine[]>([]);
-  const [currentLyric, setCurrentLyric] = useState("");
+  const [currentLyric, setCurrentLyric] = useState<number | null>(null);
   const { currentTrackIndex, currentTime } = usePlayer();
 
   useEffect(() => {
@@ -101,18 +102,42 @@ export default function SyncedLyrics() {
 
   useEffect(() => {
     const updateCurrentLyric = () => {
-      const currentLyricLine = lyrics.find(
+      const currentLyricLine = lyrics.findIndex(
         (lyric) => lyric.time <= currentTime && currentTime < lyric.time + 5
       );
       if (currentLyricLine) {
-        setCurrentLyric(currentLyricLine.text);
+        setCurrentLyric(currentLyricLine);
       }
     };
     updateCurrentLyric();
-  });
+  }, [currentTime, lyrics]);
+
+  useEffect(() => {
+    const wrapper = document.querySelector(".lyric-wrapper");
+
+    if (wrapper && currentLyric !== null) {
+      (wrapper as HTMLDivElement).style.transform = `translateY(-${
+        7 * currentLyric
+      }px)`;
+    }
+  }, [currentLyric]);
   return (
-    <div>
-      <p>{currentLyric}</p>
+    <div className="h-[60vh] w-[90vw] overflow-hidden text-[7vw] flex flex-col transition-all">
+      <div className={cn("transition-all lyrics-wrapper")}>
+        {lyrics.map((lyric, index) => (
+          <p
+            key={index}
+            className={cn(
+              "transition-all",
+              currentLyric !== null && index <= currentLyric
+                ? "text-foreground"
+                : "text-muted"
+            )}
+          >
+            {lyric.text}
+          </p>
+        ))}
+      </div>
     </div>
   );
 }
