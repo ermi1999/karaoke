@@ -1,6 +1,4 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
-import { parseBlob } from "music-metadata-browser";
 import { Button } from "./ui/button";
 import {
   Next,
@@ -16,7 +14,7 @@ import {
   Music,
 } from "./icons";
 import Image from "next/image";
-import { useTracks } from "@/components/tracksContext";
+import { usePlayer } from "@/components/playerContext";
 
 // const tracks = [
 //   { src: "/02 Henok Abebe - Honuatal (2).mp3" },
@@ -92,52 +90,26 @@ import { useTracks } from "@/components/tracksContext";
 // ];
 
 export default function Player() {
-  const { tracks, setTracks } = useTracks();
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(() => {
-    if (typeof window !== "undefined") {
-      return Number(localStorage.getItem("currentTrackIndex")) || 0;
-    }
-    return 0;
-  });
-
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [volume, setVolume] = useState(() => {
-    if (typeof window !== "undefined") {
-      return Number(localStorage.getItem("volume")) || 1;
-    }
-    return 1;
-  });
-  const [prevVolume, setPrevVolume] = useState(volume);
-  const [metadata, setMetadata] = useState({});
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const audioRef = useRef<HTMLAudioElement>(null);
-
-  useEffect(() => {
-    if (audioRef.current) {
-      setDuration(audioRef.current.duration);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume;
-    }
-  }, [volume]);
-
-  useEffect(() => {
-    if (audioRef.current) {
-      fetchMetadata(tracks[currentTrackIndex].src);
-    }
-  }, [currentTrackIndex, tracks]);
-
-  const fetchMetadata = async (src: string) => {
-    const response = await fetch(src);
-    const blob = await response.blob();
-    const metadata = await parseBlob(blob);
-    setMetadata(metadata);
-  };
+  const {
+    tracks,
+    setTracks,
+    currentTrackIndex,
+    setCurrentTrackIndex,
+    isPlaying,
+    setIsPlaying,
+    progress,
+    setProgress,
+    volume,
+    setVolume,
+    prevVolume,
+    setPrevVolume,
+    metadata,
+    currentTime,
+    setCurrentTime,
+    duration,
+    setDuration,
+    audioRef,
+  } = usePlayer();
 
   const handlePlayPause = () => {
     if (audioRef.current) {
@@ -153,7 +125,6 @@ export default function Player() {
   const handleNext = () => {
     if (audioRef.current && tracks.length > 0) {
       setCurrentTrackIndex((prevIndex) => {
-        console.log(prevIndex);
         const nextIdx = (prevIndex + 1) % tracks.length;
         if (tracks[currentTrackIndex].type !== "local")
           localStorage.setItem("currentTrackIndex", nextIdx.toString());
@@ -228,7 +199,7 @@ export default function Player() {
   };
 
   return (
-    <div className="fixed w-[90%] lg:w-[95%] xl:w-[90%] max-w-[1200px] bottom-2 left-1/2 transform -translate-x-1/2 px-3 py-3 md:py-2 inline-flex flex-col lg:flex-row lg:items-center justify-between bg-white/5 backdrop-blur-lg rounded-3xl">
+    <div className="fixed w-[95%] xl:w-[90%] max-w-[1200px] bottom-2 left-1/2 transform -translate-x-1/2 px-3 py-3 inline-flex flex-col lg:flex-row lg:items-center justify-between bg-white/5 backdrop-blur-lg rounded-3xl">
       <div className="flex flex-row justify-between w-full lg:w-64">
         <div className="flex flex-row">
           <div className="relative h-16 w-16">
@@ -263,7 +234,7 @@ export default function Player() {
           <ArrowDown />
         </button>
       </div>
-      <div className="flex flex-col-reverse lg:flex-col backdrop-blur-sm items-center justify-center p-2 space-y-2">
+      <div className="flex flex-col-reverse lg:flex-col backdrop-blur-sm items-center justify-center space-y-2">
         {tracks.length > 0 && (
           <audio
             ref={audioRef}

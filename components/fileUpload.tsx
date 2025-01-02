@@ -1,9 +1,11 @@
 "use client";
 import { useState, useRef, ChangeEvent, DragEvent } from "react";
-import { useTracks } from "./tracksContext";
+import { usePlayer } from "./playerContext";
+import { PlusCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const FileUpload = () => {
-  const { tracks, setTracks } = useTracks();
+  const { tracks, setTracks } = usePlayer();
   const [dragging, setDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const local: "local" | "backend" = "local";
@@ -48,17 +50,19 @@ const FileUpload = () => {
   };
 
   return (
-    <div>
+    <div className="h-[60%] w-[95%] md:w-[90%] max-w-[1200px]">
       <div
         onClick={handleButtonClick}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`h-[40vw] w-[90vw] rounded-5xl outline outline-muted bg-white/5 flex items-center justify-center cursor-pointer hover:bg-white/10 transition-colors ${
-          dragging ? "bg-white/10" : ""
-        }`}
+        className={cn(
+          "h-full w-full rounded-4xl md:rounded-5xl bg-white/5 flex items-center justify-center cursor-pointer text-muted hover:bg-white/10 hover:text-foreground transition-colors",
+          dragging ? "bg-white/10 text-foreground" : ""
+        )}
       >
-        Drag and drop files here or click to upload
+        <PlusCircle className="md:hidden" size={90} />
+        <PlusCircle className="hidden md:flex" size={105} />
       </div>
       <input
         type="file"
