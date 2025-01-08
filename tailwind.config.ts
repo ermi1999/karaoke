@@ -11,10 +11,12 @@ export default {
     extend: {
       fontFamily: {
         regular: ["var(--general-sans)"],
+        amharic: ["var(--amharic-sans)"],
       },
       colors: {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        dim: "hsl(var(--dim))",
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",

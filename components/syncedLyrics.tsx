@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePlayer } from "./playerContext";
 import { cn } from "@/lib/utils";
 
@@ -28,8 +28,9 @@ const parseLRC = (lrc: string): LyricLine[] => {
 
 export default function SyncedLyrics() {
   const [lyrics, setLyrics] = useState<LyricLine[]>([]);
-  const [currentLyric, setCurrentLyric] = useState<number | null>(null);
+  const [currentLyric, setCurrentLyric] = useState<LyricLine | null>(null);
   const { currentTrackIndex, currentTime } = usePlayer();
+  const currentLineRef = useRef<HTMLParagraphElement | null>(null);
 
   useEffect(() => {
     const loadLyrics = async () => {
@@ -95,6 +96,7 @@ export default function SyncedLyrics() {
 [04:58.87] 
   `;
       const parsedLyrics = parseLRC(lyricsString);
+      console.log(parsedLyrics);
       setLyrics(parsedLyrics);
     };
     loadLyrics();
@@ -102,42 +104,44 @@ export default function SyncedLyrics() {
 
   useEffect(() => {
     const updateCurrentLyric = () => {
-      const currentLyricLine = lyrics.findIndex(
-        (lyric) => lyric.time <= currentTime && currentTime < lyric.time + 5
+      const nextLyricLine = lyrics.findIndex(
+        (lyric) => lyric.time > currentTime
       );
-      if (currentLyricLine) {
-        setCurrentLyric(currentLyricLine);
+      if (nextLyricLine === 0) {
+        setCurrentLyric(null);
+      } else {
+        setCurrentLyric(lyrics[nextLyricLine - 1]);
       }
     };
     updateCurrentLyric();
   }, [currentTime, lyrics]);
 
   useEffect(() => {
-    const wrapper = document.querySelector(".lyric-wrapper");
-
-    if (wrapper && currentLyric !== null) {
-      (wrapper as HTMLDivElement).style.transform = `translateY(-${
-        7 * currentLyric
-      }px)`;
+    if (currentLineRef) {
+      currentLineRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
     }
   }, [currentLyric]);
   return (
-    <div className="h-[60vh] w-[90vw] overflow-hidden text-[7vw] flex flex-col transition-all">
-      <div className={cn("transition-all lyrics-wrapper")}>
-        {lyrics.map((lyric, index) => (
+    <div className="h-[60vh] w-[90vw] text-[5vw] flex flex-col transition-all">
+      {lyrics.map((lyric, index) => {
+        const isCurrent = lyric.time === currentLyric?.time;
+        const isPast = lyric.time < currentLyric?.time;
+        return (
           <p
+            ref={isCurrent ? currentLineRef : null}
             key={index}
             className={cn(
-              "transition-all",
-              currentLyric !== null && index <= currentLyric
-                ? "text-foreground"
-                : "text-muted"
+              "transition-all text-center font-amharic",
+              isCurrent ? "text-foreground" : isPast ? "text-dim" : "text-muted"
             )}
           >
-            {lyric.text}
+            {lyric.text ? lyric.text : "instrumental"}
           </p>
-        ))}
-      </div>
+        );
+      })}
     </div>
   );
 }
