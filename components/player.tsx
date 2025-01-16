@@ -92,7 +92,6 @@ import { usePlayer } from "@/components/playerContext";
 export default function Player() {
   const {
     tracks,
-    setTracks,
     currentTrackIndex,
     setCurrentTrackIndex,
     isPlaying,

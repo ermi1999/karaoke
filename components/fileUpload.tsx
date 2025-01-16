@@ -3,12 +3,14 @@ import { useState, useRef, ChangeEvent, DragEvent } from "react";
 import { usePlayer } from "./playerContext";
 import { PlusCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 const FileUpload = () => {
-  const { tracks, setTracks } = usePlayer();
+  const { setTracks } = usePlayer();
   const [dragging, setDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const local: "local" | "backend" = "local";
+  const isDesktop = useMediaQuery("(min-width: 640px)")
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -57,12 +59,13 @@ const FileUpload = () => {
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={cn(
-          "h-full w-full rounded-4xl md:rounded-5xl bg-white/5 flex items-center justify-center cursor-pointer text-muted hover:bg-white/10 hover:text-foreground transition-colors",
+          "h-full w-full rounded-4xl md:rounded-5xl bg-white/5 flex flex-col space-y-5 items-center justify-center cursor-pointer text-muted hover:bg-white/10 hover:text-foreground transition-colors",
           dragging ? "bg-white/10 text-foreground" : ""
         )}
       >
         <PlusCircle className="md:hidden" size={90} />
         <PlusCircle className="hidden md:flex" size={105} />
+        <p>Your player is empty {isDesktop && "drag and drop or "}click here to upload file</p>
       </div>
       <input
         type="file"

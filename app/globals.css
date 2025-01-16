@@ -81,3 +81,14 @@
 .hero {
   height: calc(100vh - 80px);
 }
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.lyrics-line-wrapper::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.lyrics-line-wrapper {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}

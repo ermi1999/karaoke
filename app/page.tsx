@@ -4,10 +4,10 @@ import { usePlayer } from "@/components/playerContext";
 import SyncedLyrics from "@/components/syncedLyrics";
 
 export default function Home() {
-  const { tracks } = usePlayer();
+  const { tracks, metadata } = usePlayer();
   return (
     <main className="flex justify-center mt-20 hero">
-      {tracks.length ? <SyncedLyrics /> : <FileUpload />}
+      {tracks.length && metadata.common ? <SyncedLyrics /> : <FileUpload />}
     </main>
   );
 }
