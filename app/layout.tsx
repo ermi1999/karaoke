@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { PlayerProvider } from "@/components/playerContext";
 import Player from "@/components/player";
+import Navbar from "@/components/navbar";
 
 const generalSans = localFont({
   src: "../public/fonts/GeneralSans_Complete/Fonts/OTF/GeneralSans-Medium.otf",
@@ -10,7 +11,7 @@ const generalSans = localFont({
 });
 
 const amharicSans = localFont({
-  src: "../public/fonts/Noto_Serif_Ethiopic/static/NotoSerifEthiopic-Regular.ttf",
+  src: "../public/fonts/Noto_Sans_Ethiopic/static/NotoSansEthiopic-SemiBold.ttf",
   variable: "--amharic-sans",
 });
 
@@ -30,6 +31,7 @@ export default function RootLayout({
         className={`${generalSans.variable} ${amharicSans.variable} antialiased font-regular`}
       >
         <PlayerProvider>
+          <Navbar />
           {children} <Player />
         </PlayerProvider>
       </body>

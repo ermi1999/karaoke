@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { usePlayer } from "./playerContext";
 import { cn } from "@/lib/utils";
-import { Music } from "lucide-react";
-import axios from "axios";
+import SvgLyricsMusic from "./icons/LyricsMusic";
 
 interface LyricLine {
   time: number;
@@ -39,6 +38,11 @@ const parseLRC = (lrc: string): LyricLine[] => {
   return lyrics;
 };
 
+const isAmharic = (text: string): boolean => {
+  const amharicRegex = /[\u1200-\u137F]/;
+  return amharicRegex.test(text);
+};
+
 export default function SyncedLyrics() {
   const [isFetchingLyrics, setIsFetchingLyrics] = useState<boolean>(false);
   const [syncedLrics, setSyncedLyrics] = useState<LyricLine[]>([]);
@@ -56,7 +60,7 @@ export default function SyncedLyrics() {
       setSyncedLyrics([]);
       setLyricsResponse(null);
       // example request https://lrclib.net/api/get?artist_name=Borislav+Slavov&track_name=I+Want+to+Live&album_name=Baldur%27s+Gate+3+(Original+Game+Soundtrack)&duration=233
-      if (metadata.common) {
+      if (metadata && metadata.common) {
         let url = "https://lrclib.net/api/get";
         if (metadata.common.artist) {
           url += `?artist_name=${metadata.common.artist}`;
@@ -73,15 +77,24 @@ export default function SyncedLyrics() {
               : `?album_name=${metadata.common.album}`;
         }
         try {
-          const response = await axios.get(url);
-          setLyricsResponse(response.data);
+          const response = await fetch(url, {
+            method: "GET",
+            cache: "force-cache",
+          });
+          const data = await response.json();
+          if (data) setLyricsResponse(data);
+          else {
+            setPlainLyrics([]);
+            setSyncedLyrics([]);
+            setLyricsResponse(null);
+          }
         } catch (error) {
           console.log(error);
           setPlainLyrics([]);
           setSyncedLyrics([]);
           setLyricsResponse(null);
         } finally {
-          setIsFetchingLyrics(false);
+          setTimeout(() => setIsFetchingLyrics(false), 1000);
         }
       }
     };
@@ -94,6 +107,9 @@ export default function SyncedLyrics() {
       const syncedLyrics = lyricsResponse.syncedLyrics;
       if (lyricsResponse.syncedLyrics) setSyncedLyrics(parseLRC(syncedLyrics));
       if (plainLyrics) setPlainLyrics(plainLyrics.split("\n"));
+    } else {
+      setPlainLyrics([]);
+      setSyncedLyrics([]);
     }
   }, [lyricsResponse]);
 
@@ -128,36 +144,39 @@ export default function SyncedLyrics() {
   }, [currentLyric]);
   return (
     <div
-      className="h-[60vh] w-[90vw] text-5xl flex flex-col items-center space-y-5 transition-all overflow-hidden overflow-y-scroll lyrics-line-wrapper"
+      className="h-[100%] w-[90%] md:w-[50%] text-5xl flex flex-col items-center text-center space-y-5 transition-all overflow-hidden overflow-y-scroll lyrics-line-wrapper"
       ref={linesWrapper}
     >
       {isFetchingLyrics ? (
-        <p>Fetching lyrics...</p>
+        <p>Loading lyrics...</p>
       ) : syncedLrics.length > 0 ? (
         syncedLrics.map((lyric, index) => {
           const isCurrent = lyric.time === currentLyric?.time;
           const isPast = currentLyric && lyric.time < currentLyric?.time;
+          const isAmharicText = isAmharic(lyric.text);
           return (
             <p
               ref={isCurrent ? currentLineRef : null}
               key={index}
               className={cn(
-                "transition-all font-amharic",
+                "transition-all",
                 isCurrent
                   ? "text-foreground"
                   : isPast
                   ? "text-dim"
-                  : "text-muted"
+                  : "text-muted",
+                isAmharicText ? "font-amharic" : ""
               )}
             >
-              {lyric.text ? lyric.text : <Music size={48} />}
+              {lyric.text ? lyric.text : <SvgLyricsMusic />}
             </p>
           );
         })
       ) : plainLyrics.length > 0 ? (
         plainLyrics.map((lyric, index) => {
+          const isAmharicText = isAmharic(lyric);
           return (
-            <p className="font-amharic" key={index}>
+            <p className={cn(isAmharicText ? "font-amharic" : "")} key={index}>
               {lyric}
             </p>
           );

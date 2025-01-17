@@ -45,8 +45,8 @@
 .volume-bar {
   -webkit-appearance: none;
   appearance: none;
-  height: 5px;
-  background: white;
+  height: 8px;
+  background: hsl(var(--muted));
   outline: none;
   opacity: 0.8;
   transition: opacity 0.2s;
@@ -62,20 +62,20 @@
 .volume-bar::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 8px;
   background: white;
   cursor: pointer;
-  border-radius: 50%;
+  border-radius: 35px;
 }
 
 .progress-bar::-moz-range-thumb,
 .volume-bar::-moz-range-thumb {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 8px;
   background: white;
   cursor: pointer;
-  border-radius: 50%;
+  border-radius: 35px;
 }
 
 .hero {
