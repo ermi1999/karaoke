@@ -7,6 +7,8 @@ export default function Signup() {
       <input id="email" name="email" type="email" required />
       <label htmlFor="password">Password:</label>
       <input id="password" name="password" type="password" required />
+      <label htmlFor="fullName">Full Name:</label>
+      <input id="fullName" name="fullName" type="text" required />
       <button formAction={signup}>Sign up</button>
     </form>
   );

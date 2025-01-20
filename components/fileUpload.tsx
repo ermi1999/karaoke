@@ -4,13 +4,15 @@ import { usePlayer } from "./playerContext";
 import { PlusCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { Button } from "./ui/button";
+import { postData } from "@/lib/helpers";
 
 const FileUpload = () => {
   const { setTracks } = usePlayer();
   const [dragging, setDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const local: "local" | "backend" = "local";
-  const isDesktop = useMediaQuery("(min-width: 640px)")
+  const isDesktop = useMediaQuery("(min-width: 640px)");
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -53,6 +55,14 @@ const FileUpload = () => {
 
   return (
     <div className="h-[60%] w-[95%] md:w-[90%] max-w-[1200px]">
+      <Button
+        variant="secondary"
+        onClick={() => {
+          postData({ url: "/auth/signout" });
+        }}
+      >
+        Sign Out
+      </Button>
       <div
         onClick={handleButtonClick}
         onDragOver={handleDragOver}
@@ -65,7 +75,10 @@ const FileUpload = () => {
       >
         <PlusCircle className="md:hidden" size={90} />
         <PlusCircle className="hidden md:flex" size={105} />
-        <p>Your player is empty {isDesktop && "drag and drop or "}click here to upload file</p>
+        <p>
+          Your player is empty {isDesktop && "drag and drop or "}click here to
+          upload file
+        </p>
       </div>
       <input
         type="file"
