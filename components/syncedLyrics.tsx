@@ -144,7 +144,7 @@ export default function SyncedLyrics() {
   }, [currentLyric]);
   return (
     <div
-      className="h-[100%] w-[90%] md:w-[50%] text-5xl flex flex-col items-center text-center space-y-5 transition-all overflow-hidden overflow-y-scroll lyrics-line-wrapper"
+      className="h-[100%] w-[90%] md:w-[50%] text-5xl flex flex-col items-center text-center space-y-7 transition-all overflow-hidden overflow-y-scroll lyrics-line-wrapper"
       ref={linesWrapper}
     >
       {isFetchingLyrics ? (
